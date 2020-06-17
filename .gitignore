@@ -1,0 +1,39 @@
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### STS ###
+.apt_generated
+.factorypath
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+/build/
+
+### VS Code ###
+.vscode/
+wrapper
+/client-skeleton-provider/target
+/client-skeleton-consumer/target
+/client-skeleton-publisher/target
+/client-skeleton-subscriber/target
+/mvnw
+/mvnw.cmd
+/.settings
+*.prefs
+/.metadata/
+
+*.log
+
+
+/.recommenders/
