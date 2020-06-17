@@ -7,26 +7,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
+import eu.arrowhead.common.CommonConstants;
 
 @Service
 public class ModbusDataWriter {
 	FileWriter csvWriter;
-	ThreadWriteModbusDataRecord thread;
 	
 	@Autowired
 	private ModbusDataRecordContent modbusDataRecordContent;
 	
-	private final Logger logger = LogManager.getLogger(ModbusDataWriter.class);
+	@Value("${record_period: 200}")
+	private int recordPeriod;
 	
+	private final Logger logger = LogManager.getLogger(ModbusDataWriter.class);
 	
 	public void startRecord() {
 		if (modbusDataRecordContent.getFileName() == null) {
@@ -39,7 +40,7 @@ public class ModbusDataWriter {
 			logger.error("The csv file cannot be created!");
 			e.printStackTrace();
 		}
-		// thread = new ThreadWriteModbusDataRecord();
+
 		Timer timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask() {
 			String slaveAddress = modbusDataRecordContent.getSlaveAddress();
@@ -62,7 +63,7 @@ public class ModbusDataWriter {
 					e.printStackTrace();
 				}
 			}
-		}, 0, 20);
+		}, 0, recordPeriod);
 		
 	}
 	
@@ -77,29 +78,5 @@ public class ModbusDataWriter {
 	    csvWriter.append("\n");
 		
 	    csvWriter.flush();
-	}
-	
-	class ThreadWriteModbusDataRecord extends Thread {
-		String slaveAddress = modbusDataRecordContent.getSlaveAddress();
-		List<String> recordContents = modbusDataRecordContent.getContent();
-		
-		public void run() {
-			List<String> record = new ArrayList<String>();
-			HashMap<String, String> recordMap = ModbusDataCacheManager.convertModbusDataToCSVRecord(slaveAddress);
-			for (int i = 0; i < recordContents.size(); i++) {
-				record.add(recordMap.get(recordContents.get(i)));
-			}
-			
-		    	
-			try {
-				csvWriter.append(String.join(",", record));
-				csvWriter.append("\n");
-				csvWriter.flush();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-				
-		}
 	}
 }

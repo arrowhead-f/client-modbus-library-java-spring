@@ -1,7 +1,6 @@
 package de.twt.client.modbus.common;
 
 import java.io.Serializable;
-import java.util.HashMap;
 
 public class ModbusWriteRequestDTO implements Serializable {
 	private static final long serialVersionUID = -8476623473551110412L;

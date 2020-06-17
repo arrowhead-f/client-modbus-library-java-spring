@@ -1,21 +1,12 @@
 package de.twt.client.modbus.consumer;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.client.library.config.ApplicationInitListener;
-import eu.arrowhead.common.CommonConstants;
-import eu.arrowhead.common.Defaults;
 import eu.arrowhead.common.core.CoreSystem;
-import eu.arrowhead.common.core.CoreSystemService;
 
 @Component
 public class ConsumerApplicationInitListener extends ApplicationInitListener {
@@ -25,8 +16,6 @@ public class ConsumerApplicationInitListener extends ApplicationInitListener {
 	
 	@Autowired
 	private ArrowheadService arrowheadService;
-	
-	private final Logger logger = LogManager.getLogger(ConsumerApplicationInitListener.class);
 	
 	//=================================================================================================
 	// methods

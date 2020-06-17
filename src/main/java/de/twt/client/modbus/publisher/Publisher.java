@@ -5,9 +5,8 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.PostConstruct;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,11 +55,6 @@ public class Publisher {
 	private EventModbusData configModbusData;
 	private SystemRequestDTO source;
 	
-	//@PostConstruct
-	private void postConstruct() {
-		createSystemRequestDTO();
-	}
-	
 	//-------------------------------------------------------------------------------------------------
 	// Equipment Ontology event
 	
@@ -72,22 +66,17 @@ public class Publisher {
 			logger.info("this is already the end of production.");
 		}
 		
-		new Thread(){
-			public void run(){
-				while(!stopPublishing){
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				if (!stopPublishing) {
 					for (ModbusSystem.Module tail : tails) {
 						publishOntologyOutput(tail);
 					}
-
-					try {
-						TimeUnit.MILLISECONDS.sleep(1000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
 				}
 			}
-		}.start();
+		}, 0, 1000);
 	}
 	
 	
@@ -137,13 +126,16 @@ public class Publisher {
 		logger.debug("start publishing modbus data event regularly...");
 		this.configModbusData = configModbusData;
 		stopPublishing = false;
-		new Thread(){
-			public void run(){
-				while(!stopPublishing){
+		
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				if (!stopPublishing) {
 					publishModbusDataOnce();
 				}
 			}
-		}.start();
+		}, 0, configModbusData.getPublishingPeriodTime());
 	}
 	
 	// publish all events (modbus data) only once which are described in PublisherConfig (different slaves)
@@ -225,29 +217,4 @@ public class Publisher {
 		}
 		return filteredData;
 	}
-	/*
-	private String getEventPayload(String slaveAddress, String type, int startAddress, int length) {
-		logger.debug("generate the event playload...");
-		String payload = "";
-		switch(type){
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_COIL: 
-			payload = getEventPayload(ModbusDataCacheManager.getCoils(slaveAddress), startAddress, length); break;
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_DISCRETE_INPUT: 
-			payload = getEventPayload(ModbusDataCacheManager.getDiscreteInputs(slaveAddress), startAddress, length); break;
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_HOLDING_REGISTER: 
-			payload = getEventPayload(ModbusDataCacheManager.getHoldingRegisters(slaveAddress), startAddress, length); break;
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_INPUT_REGISTER: 
-			payload = getEventPayload(ModbusDataCacheManager.getInputRegisters(slaveAddress), startAddress, length); break;
-		}
-		return payload;
-	}
-	
-	private <T> String getEventPayload(HashMap<Integer, T> data, int startAddress, int length){
-		String payload = "";
-		for(int idx = startAddress; idx < length; idx++) {
-			payload += data.get(idx).toString() + ',';
-		}
-		return payload.substring(0, payload.length()-1);
-	}
-	*/
 }

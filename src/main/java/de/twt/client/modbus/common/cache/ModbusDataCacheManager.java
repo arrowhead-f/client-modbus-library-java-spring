@@ -176,6 +176,10 @@ public class ModbusDataCacheManager {
 		record.put("slaveAddress", slaveAddress);
 		ModbusData modbusDataCache = modbusDataCaches.get(slaveAddress);
 		
+		if (modbusDataCache == null) {
+			return record;
+		}
+		
 		record.putAll(convertModbusDataMemoryTypeToRecord(ModbusConstants.MODBUS_DATA_TYPE.coil, modbusDataCache.getCoils()));
 		record.putAll(convertModbusDataMemoryTypeToRecord(ModbusConstants.MODBUS_DATA_TYPE.discreteInput, modbusDataCache.getDiscreteInputs()));
 		record.putAll(convertModbusDataMemoryTypeToRecord(ModbusConstants.MODBUS_DATA_TYPE.holdingRegister, modbusDataCache.getHoldingRegisters()));

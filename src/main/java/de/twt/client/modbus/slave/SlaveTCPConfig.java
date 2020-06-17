@@ -1,12 +1,5 @@
 package de.twt.client.modbus.slave;
 
-import java.util.List;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Repository;
-
 
 public class SlaveTCPConfig {
 	private RemoteIOData remoteIO;

@@ -12,12 +12,9 @@ public class ConsumerModbusConstants {
 	public static final String HTTP_METHOD = "http-method";
 	public static final String HTTPS_METHOD = "https-method";
 	
-	public static final String READ_MODBZS_DATA_SERVICE_DEFINITION = "readmodbusdata";
-	public static final String WRITE_MODBZS_DATA_SERVICE_DEFINITION = "writeModbusData";
+	public static final String READ_MODBUS_DATA_SERVICE_DEFINITION = "readmodbusdata";
+	public static final String WRITE_MODBUS_DATA_SERVICE_DEFINITION = "writeModbusData";
 	public static final String REQUEST_PARAM_KEY_SLAVEADDRESS = "slaveAddress";
-	
-	public static final String THREAD_READ = "thread-read";
-	public static final String THREAD_WRITE = "thread-write";
 	
 	//=================================================================================================
 	// assistant methods

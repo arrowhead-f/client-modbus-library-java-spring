@@ -1,10 +1,14 @@
 package de.twt.client.modbus.master;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -48,11 +52,14 @@ public class MasterTCP {
 	
 	public void readDataThreadForRequest() {
 		logger.debug("start reading data thread for read request...");
-		Thread thread = new Thread() {
+		final int period = this.masterTCPConfig.getPeriodTime();
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
 			public void run() {
-				while(!stopReadingData){
+				if (!stopReadingData) {
 					if (ModbusReadRequestCacheManager.isEmpty(slaveAddress)) {
-						continue;
+						return;
 					}
 					
 					ModbusReadRequestDTO request = ModbusReadRequestCacheManager.getFirstReadRequest(slaveAddress);
@@ -71,9 +78,7 @@ public class MasterTCP {
 					ModbusReadRequestCacheManager.deleteReadRequest(slaveAddress, request.getID());
 				}
 			}
-		};
-		threads.put(MasterTCPConstants.THREAD_READ, thread);
-		thread.start();
+		}, 0, period);
 	}
 	
 	private void readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE type, HashMap<Integer, Integer> addressMap){
@@ -92,28 +97,16 @@ public class MasterTCP {
 	
 	public void readDataThreadForEvent() {
 		logger.debug("start reading data thread for event...");
-		Thread thread = new Thread() {
+		final int period = this.masterTCPConfig.getPeriodTime();
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
 			public void run() {
-				while(!stopReadingData){
-					long startTime=System.currentTimeMillis(); 
+				if (!stopReadingData) {
 					readDataForEvent();
-					long endTime=System.currentTimeMillis(); 
-					long intervalTime = endTime - startTime;
-					if (intervalTime > masterTCPConfig.getPeriodTime()) {
-						logger.warn("MasterTCP.readDataThread: the running time of one period is longer than the setting period time.");
-					} else {
-						try {
-							TimeUnit.MILLISECONDS.sleep(masterTCPConfig.getPeriodTime() - intervalTime);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
 				}
 			}
-		};
-		threads.put(MasterTCPConstants.THREAD_READ, thread);
-		thread.start();
+		}, 0, period);
 	}
 	
 	public void readDataForEvent() {
@@ -160,31 +153,17 @@ public class MasterTCP {
 	// TODO: wait time definition, delete first request (uncomment)
 	public void writeDataThread() {
 		logger.info("writeDataThread: start writing data thread...");
-		Thread thread = new Thread() {
+		final int period = this.masterTCPConfig.getPeriodTime();
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
 			public void run() {
-				while(!stopWritingData){
-					long startTime=System.currentTimeMillis();
-					if (ModbusWriteRequestCacheManager.isImplemented(slaveAddress)) {
-						continue;
-					}
+				if (!stopWritingData && !ModbusWriteRequestCacheManager.isImplemented(slaveAddress)) {
 					ModbusWriteRequestDTO request = ModbusWriteRequestCacheManager.getWriteRequestToImplement(slaveAddress);
 					writeRequestData(request);
-					long endTime=System.currentTimeMillis(); 
-					long intervalTime = endTime - startTime;
-					if (intervalTime > masterTCPConfig.getPeriodTime()) {
-						logger.warn("MasterTCP.writeDataThread: the running time of one period is longer than the setting period time.");
-					}
-					try {
-						TimeUnit.MILLISECONDS.sleep(10);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
 				}
 			}
-		};
-		threads.put(MasterTCPConstants.THREAD_WRITE, thread);
-		thread.start();
+		}, 0, period);
 	}
 	
 	public void writeRequestData(ModbusWriteRequestDTO request){
