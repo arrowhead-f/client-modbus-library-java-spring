@@ -29,10 +29,6 @@
 			<name>GitHub OWNER Apache Maven Packages</name>
 			<url>https://maven.pkg.github.com/arrowhead-f/client-library-java-spring</url>
 		</repository>
-		<repository>
-			<id>arrowhead-client</id>
-			<url>https://github.com/arrowhead-f/client-library-java-spring/raw/master/client-mvn-repo</url>
-		</repository>
 	</repositories>
 	
 	<distributionManagement>
@@ -57,6 +53,12 @@
 	</dependencies>
 	
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/java</directory>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
     			<groupId>org.springframework.boot</groupId>
