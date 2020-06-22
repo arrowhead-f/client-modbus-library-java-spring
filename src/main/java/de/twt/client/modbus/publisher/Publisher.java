@@ -124,6 +124,7 @@ public class Publisher {
 	// publish all events (modbus data) regularly which are described in PublisherConfig
 	public void publishModbusData(EventModbusData configModbusData){
 		logger.debug("start publishing modbus data event regularly...");
+		createSystemRequestDTO();
 		this.configModbusData = configModbusData;
 		stopPublishing = false;
 		
@@ -149,6 +150,7 @@ public class Publisher {
 	
 	public void publishModbusDataOnce(EventModbusData configModbusData) { 
 		logger.info("publish modbus data event once...");
+		createSystemRequestDTO();
 		this.configModbusData = configModbusData;
 		List<Slave> slaves = configModbusData.getSlaves();
 		for (int idx = 0; idx < slaves.size(); idx++) {
