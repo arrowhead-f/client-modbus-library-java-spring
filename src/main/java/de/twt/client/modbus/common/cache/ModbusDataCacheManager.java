@@ -1,11 +1,14 @@
 package de.twt.client.modbus.common.cache;
 
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
 
 import de.twt.client.modbus.common.ModbusData;
 import de.twt.client.modbus.common.constants.ModbusConstants;
+import eu.arrowhead.dto.SenML;
 
 public class ModbusDataCacheManager {
 	private final static HashMap<String, ModbusData> modbusDataCaches = new HashMap<String, ModbusData>();
@@ -186,7 +189,89 @@ public class ModbusDataCacheManager {
 		record.putAll(convertModbusDataMemoryTypeToRecord(ModbusConstants.MODBUS_DATA_TYPE.inputRegister, modbusDataCache.getInputRegisters()));
 		
 		return record;
+	}
+	
+	synchronized static public Vector<SenML> convertToSenMLListIIOT() {
+		Vector<SenML> smls = new Vector<SenML>();
+		for (Map.Entry<String, ModbusData> modbusDataCacheSet : modbusDataCaches.entrySet()) {
+			ModbusData modbusDataCache = modbusDataCacheSet.getValue();
+			if (!modbusDataCache.getHoldingRegisters().containsKey(231)) {
+				return smls;
+			}
+			SenML sml0 = new SenML();
+			SenML sml2 = new SenML();
+			SenML sml3 = new SenML();
+			SenML sml4 = new SenML();
+			SenML sml5 = new SenML();
+			SenML sml6 = new SenML();
+			SenML sml7 = new SenML();
+			long timeSeconds = new Date().getTime()/1000;
+			sml0.setBn("environment");
+			sml0.setBt((double) timeSeconds);
+			sml2.setN("temperatue_1");
+			sml2.setV((double) modbusDataCache.getHoldingRegisters().get(231)/1000);
+			sml2.setU("degree");
+			sml3.setN("temperatue_2");
+			sml3.setV((double) modbusDataCache.getHoldingRegisters().get(233)/1000);
+			sml3.setU("degree");
+			sml4.setN("ampere_1");
+			sml4.setV((double) modbusDataCache.getHoldingRegisters().get(235)/1000);
+			sml4.setU("mA");
+			sml5.setN("ampere_2");
+			sml5.setV((double) modbusDataCache.getHoldingRegisters().get(237)/1000);
+			sml5.setU("mA");
+			sml6.setN("pressure_1");
+			sml6.setV((double) modbusDataCache.getHoldingRegisters().get(239)/1000);
+			sml6.setU("Bars");
+			sml7.setN("pressure_2");
+			sml7.setV((double) modbusDataCache.getHoldingRegisters().get(241)/1000);
+			sml7.setU("Bars");
+			smls.add(sml0);
+			smls.add(sml2);
+			smls.add(sml3);
+			smls.add(sml4);
+			smls.add(sml5);
+			smls.add(sml6);
+			smls.add(sml7);
+		}
 		
+		return smls;
+	}
+	
+	synchronized static public Vector<SenML> convertToSenMLListWagoPLC() {
+		Vector<SenML> smls = new Vector<SenML>();
+		for (Map.Entry<String, ModbusData> modbusDataCacheSet : modbusDataCaches.entrySet()) {
+			ModbusData modbusDataCache = modbusDataCacheSet.getValue();
+			if (!modbusDataCache.getHoldingRegisters().containsKey(10)) {
+				return null;
+			}
+			SenML sml0 = new SenML();
+			SenML sml1 = new SenML();
+			SenML sml2 = new SenML();
+			SenML sml3 = new SenML();
+			SenML sml4 = new SenML();
+			long timeSeconds = new Date().getTime()/1000;
+			sml0.setBn("producition");
+			sml0.setBt((double) timeSeconds);
+			sml1.setN("SerialNumber");
+			sml1.setV(modbusDataCache.getHoldingRegisters().containsKey(10) ? (double) modbusDataCache.getHoldingRegisters().get(10) : (double) 0);
+			sml1.setU("-");
+			sml2.setN("productId");
+			sml2.setV(modbusDataCache.getHoldingRegisters().containsKey(11) ? (double) modbusDataCache.getHoldingRegisters().get(11) : (double) 0);
+			sml2.setU("-");
+			sml3.setN("width");
+			sml3.setV(modbusDataCache.getHoldingRegisters().containsKey(0) ? (double) modbusDataCache.getHoldingRegisters().get(0) : (double) 0);
+			sml3.setU("mm");
+			sml4.setN("thickness");
+			sml4.setV(modbusDataCache.getHoldingRegisters().containsKey(13) ? (double) modbusDataCache.getHoldingRegisters().get(13) : (double) 0);
+			sml4.setU("mm");
+			smls.add(sml0);
+			smls.add(sml1);
+			smls.add(sml2);
+			smls.add(sml3);
+			smls.add(sml4);
+		}
+		return smls;
 	}
 	
 	static private <T> HashMap<String, String> convertModbusDataMemoryTypeToRecord(ModbusConstants.MODBUS_DATA_TYPE type, HashMap<Integer, T> memoryData) {

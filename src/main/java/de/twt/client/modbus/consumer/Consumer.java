@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import de.twt.client.modbus.common.ModbusData;
@@ -29,6 +31,7 @@ import eu.arrowhead.common.dto.shared.ServiceQueryFormDTO;
 import eu.arrowhead.common.dto.shared.OrchestrationFlags.Flag;
 import eu.arrowhead.common.dto.shared.OrchestrationFormRequestDTO.Builder;
 import eu.arrowhead.common.exception.ArrowheadException;
+import eu.arrowhead.dto.SenML;
 
 @Component
 public class Consumer {
@@ -257,5 +260,86 @@ public class Consumer {
 				interfaceName, token, null, queryParams);
     	System.out.println(status);
 	}
+
+	public void sendIIOTDataToDataManager() {
+		logger.info("sendIIOTDataToDataManager: start sending data to data manager...");
+		// get the service providers from the arrowhead core system (orchestration)
+		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("historian");
+		
+		logger.debug(Utilities.toJson(orchestrationResponse));
+		
+		if (orchestrationResponse == null) {
+			logger.warn("No orchestration response received");
+			return;
+		} else if (orchestrationResponse.getResponse().isEmpty()) {
+			logger.warn("No provider with service \"proxy\" found during the orchestration");
+			return;
+		}
+		
+		// create writing data threads for each provider
+		OrchestrationResultDTO orchestrationResult = orchestrationResponse.getResponse().get(0);
+		final HttpMethod httpMethod = HttpMethod.valueOf("PUT");
+		final String providerAddress = orchestrationResult.getProvider().getAddress();
+		final int providerPort = orchestrationResult.getProvider().getPort();
+    	final String serviceUri = orchestrationResult.getServiceUri() + "/IIOT_Gateway/environment";
+    	final String interfaceName = orchestrationResult.getInterfaces().get(0).getInterfaceName();
+    	final String token = orchestrationResult.getAuthorizationTokens() == null ? 
+    			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
+    	final String[] queryParams = {};
+		
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				Vector<SenML> request = ModbusDataCacheManager.convertToSenMLListIIOT();
+	    		if(request == null) {
+	    			return;
+	    		}
+	    		System.out.println(Utilities.toJson(request));
+	    		arrowheadService.consumeServiceHTTP(HttpStatus.class, httpMethod, providerAddress, providerPort, serviceUri,
+						interfaceName, token, request, queryParams);
+			}
+		}, 0, 1000);
+	}
 	
+	public void sendModbusDataToDataManager() {
+		logger.info("sendModbusDataToDataManager: start sending data to data manager...");
+		// get the service providers from the arrowhead core system (orchestration)
+		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("historian");
+		
+		logger.debug(Utilities.toJson(orchestrationResponse));
+		
+		if (orchestrationResponse == null) {
+			logger.warn("No orchestration response received");
+			return;
+		} else if (orchestrationResponse.getResponse().isEmpty()) {
+			logger.warn("No provider with service \"proxy\" found during the orchestration");
+			return;
+		}
+		
+		// create writing data threads for each provider
+		OrchestrationResultDTO orchestrationResult = orchestrationResponse.getResponse().get(0);
+		final HttpMethod httpMethod = HttpMethod.valueOf("PUT");
+		final String providerAddress = orchestrationResult.getProvider().getAddress();
+		final int providerPort = orchestrationResult.getProvider().getPort();
+    	final String serviceUri = orchestrationResult.getServiceUri() + "/Wago_PLC/production";
+    	final String interfaceName = orchestrationResult.getInterfaces().get(0).getInterfaceName();
+    	final String token = orchestrationResult.getAuthorizationTokens() == null ? 
+    			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
+    	final String[] queryParams = {};
+    	
+    	Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				Vector<SenML> request = ModbusDataCacheManager.convertToSenMLListWagoPLC();
+	    		if (request == null) {
+	    			return;
+	    		}
+	    		System.out.println(Utilities.toJson(request));
+	    		arrowheadService.consumeServiceHTTP(HttpStatus.class, httpMethod, providerAddress, providerPort, serviceUri,
+						interfaceName, token, request, queryParams);
+			}
+		}, 0, 1000);
+	}
 }
