@@ -115,7 +115,7 @@ public class Publisher {
 		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
 		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);
 		arrowheadService.publishToEventHandler(publishRequestDTO);
-		logger.info("publish event {} successfully!", eventType);
+		logger.debug("publish event {} successfully!", eventType);
 	}
 	
 	//-------------------------------------------------------------------------------------------------
@@ -149,7 +149,7 @@ public class Publisher {
 	}
 	
 	public void publishModbusDataOnce(EventModbusData configModbusData) { 
-		logger.info("publish modbus data event once...");
+		logger.debug("publish modbus data event once...");
 		createSystemRequestDTO();
 		this.configModbusData = configModbusData;
 		List<Slave> slaves = configModbusData.getSlaves();

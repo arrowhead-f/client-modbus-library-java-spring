@@ -85,9 +85,7 @@ public class PublisherApplicationInitListener extends ApplicationInitListener {
 		setTokenSecurityFilter();
 		
 		if ( arrowheadService.echoCoreSystem(CoreSystem.EVENT_HANDLER) ) {
-			
 			arrowheadService.updateCoreServiceURIs(CoreSystem.EVENT_HANDLER);	
-			
 			publishInitStartedEvent();
 		}
 		
@@ -138,7 +136,6 @@ public class PublisherApplicationInitListener extends ApplicationInitListener {
 		logger.info( "publishInitStartedEvent started..." );
 		
 		final String eventType = "StartEvent";
-		
 		final SystemRequestDTO source = new SystemRequestDTO();
 		source.setSystemName(clientSystemName);
 		source.setAddress(clientSystemAddress);

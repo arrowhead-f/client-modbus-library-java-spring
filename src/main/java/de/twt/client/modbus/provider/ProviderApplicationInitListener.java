@@ -81,14 +81,15 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 		setTokenSecurityFilter();
 		
 		//Register services into ServiceRegistry
-		// register read modbus data service
 		
+		// register echo service
 		final ServiceRegistryRequestDTO echoRequest = 
 				createServiceRegistryRequest(
 						ProviderConstants.ECHO_DEFINITION, 
 						ProviderConstants.ECHO_URI, 
 						ProviderConstants.ECHO_HTTP_METHOD);
 		arrowheadService.forceRegisterServiceToServiceRegistry(echoRequest);
+		logger.info(ProviderConstants.ECHO_DEFINITION + " registered");
 		
 		// register read modbus data service
 		final ServiceRegistryRequestDTO readModbusDataRequest = 
@@ -98,6 +99,7 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 						ProviderConstants.READ_MODBUS_DATA_HTTP_METHOD);
 		readModbusDataRequest.getMetadata().put(ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress);
 		arrowheadService.forceRegisterServiceToServiceRegistry(readModbusDataRequest);
+		logger.info(ProviderConstants.READ_MODBUS_DATA_SERVICE_DEFINITION + " registered");
 		
 		// register write modbus data service
 		final ServiceRegistryRequestDTO writeModbusDataRequest = 
@@ -107,8 +109,9 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 						ProviderConstants.WRITE_MODBUS_DATA_HTTP_METHOD);
 		writeModbusDataRequest.getMetadata().put(ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress);
 		arrowheadService.forceRegisterServiceToServiceRegistry(writeModbusDataRequest);
+		logger.info(ProviderConstants.WRITE_MODBUS_DATA_SERVICE_DEFINITION + " registered");
 		
-		// register write modbus data csche service
+		// register write modbus data cache service
 		final ServiceRegistryRequestDTO setModbusDataCacheRequest = 
 				createServiceRegistryRequest(
 						ProviderConstants.SET_MODBUS_DATA_CACHE_SERVICE_DEFINITION, 
@@ -116,6 +119,7 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 						ProviderConstants.SET_MODBUS_DATA_CACHE_HTTP_METHOD);
 		setModbusDataCacheRequest.getMetadata().put(ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress);
 		arrowheadService.forceRegisterServiceToServiceRegistry(setModbusDataCacheRequest);
+		logger.info(ProviderConstants.SET_MODBUS_DATA_CACHE_SERVICE_DEFINITION + " registered");
 	}
 	
 	//-------------------------------------------------------------------------------------------------

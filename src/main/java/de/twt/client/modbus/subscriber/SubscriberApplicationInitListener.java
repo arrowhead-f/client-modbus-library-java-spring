@@ -86,7 +86,7 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 		
 		if ( arrowheadService.echoCoreSystem(CoreSystem.EVENT_HANDLER)) {			
 			arrowheadService.updateCoreServiceURIs(CoreSystem.EVENT_HANDLER);	
-			subscribeToPresetEvents();			
+			subscribeToPresentEvents();			
 		} else {
 			logger.error("customInit: the event handler does not work in the core system!");
 		}
@@ -163,12 +163,12 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	private void subscribeToPresetEvents() {
+	private void subscribeToPresentEvents() {
 		
 		final Map<String, String> eventTypeMap = subscriberEventTypeURI.getEventTypeURIMap();
 		
 		if(eventTypeMap == null) {
-			logger.info("No preset events to subscribe.");
+			logger.info("No present events to subscribe.");
 			return;
 		}
 		final SystemRequestDTO subscriber = new SystemRequestDTO();

@@ -46,12 +46,12 @@ public class SubscriberController {
 	//TODO: implement here additional subscriber related REST end points
 	@PostMapping(path = SubscriberConstants.MODBUS_DATA_URI) 
 	public void receivePublsisherEventModbusData(@RequestBody final EventDTO event) {
-		logger.debug("receivePublsisherStartedRunEvent started... ");
+		logger.debug("receivePublsisherEventModbusData started... ");
 		if (event.getEventType() == null) {			
-			logger.debug("EventType is null.");
+			logger.warn("EventType is null.");
 			return;
 		}
-		logger.info(Utilities.toJson(event));
+		
 		Map<String, String> metadata = event.getMetaData();
 		ModbusData modbusDataEvent = Utilities.fromJson(event.getPayload(), ModbusData.class); 
 		final String slaveAddress = metadata.get(EventConstants.MODBUS_DATA_METADATA_SLAVEADDRESS);
@@ -61,13 +61,13 @@ public class SubscriberController {
 	
 	@PostMapping(path = SubscriberConstants.Module_URI) 
 	public void receivePublsisherEventModule(@RequestBody final EventDTO event) {
-		logger.info("receivePublsisherEventModule started... ");
+		logger.debug("receivePublsisherEventModule started... ");
 		if (event.getEventType() == null) {			
-			logger.info("EventType is null.");
+			logger.warn("EventType is null.");
 			return;
 		}
 		if (modbusSystemCacheManager.getModbusSystem() == null) {
-			logger.info("There is no data in modbus system!");
+			logger.warn("There is no data in modbus system!");
 			return;
 		}
 		List<ModbusSystem.Module> modules = modbusSystemCacheManager.getHeadModules();
@@ -91,7 +91,5 @@ public class SubscriberController {
 		
 		ModbusDataCacheManager.setModbusData(input.getSlaveAddress(), input.getType(), 
 				input.getAddress(), event.getPayload());
-		
-		logger.info(Utilities.toJson(ModbusDataCacheManager.getDiscreteInputs(input.getSlaveAddress())));
 	}
 }
