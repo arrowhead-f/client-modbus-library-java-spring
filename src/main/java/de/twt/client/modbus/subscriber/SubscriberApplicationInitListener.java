@@ -22,6 +22,7 @@ import de.twt.client.modbus.common.ModbusSystem;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.security.ModbusSecurityConfig;
+import de.twt.client.modbus.ontology.ModbusOntologyModule;
 import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.client.library.config.ApplicationInitListener;
 import eu.arrowhead.client.library.util.ClientCommonConstants;
@@ -92,21 +93,16 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 		}
 		
 		// set default input in den ModbusDataManager
-		List<ModbusSystem.Module> modules = modbusSystemCacheManager.getHeadModules();
-		for (ModbusSystem.Module module : modules) {
-			if (module.getPreModuleName() == null || module.getPreModuleName() == "") {
-				continue;
-			}
-			ModbusSystem.Module.DataInterface input = module.getInput();
-			if (input == null) {
-				logger.warn("The Modul does not have the input!");
+		List<ModbusOntologyModule> modules = modbusSystemCacheManager.getHeadModules();
+		for (ModbusOntologyModule module : modules) {
+			if (module.name == null || module.name == "") {
 				continue;
 			}
 			
-			String slaveAddress = input.getSlaveAddress();
-			int address = input.getAddress();
-			String defaultValue = input.getDefaultValue();
-			switch(input.getType()) {
+			String slaveAddress = module.ip;
+			int address = module.memoryTypeAddress;
+			String defaultValue = module.defaultValue;
+			switch(module.memoryType) {
 			case coil: ModbusDataCacheManager.setCoil(slaveAddress, address, Boolean.valueOf(defaultValue)); break;
 			case discreteInput: ModbusDataCacheManager.setDiscreteInput(slaveAddress, address, Boolean.valueOf(defaultValue)); break;
 			case holdingRegister: ModbusDataCacheManager.setHoldingRegister(slaveAddress, address, Integer.valueOf(defaultValue)); break;

@@ -18,6 +18,7 @@ import de.twt.client.modbus.common.ModbusSystem;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
+import de.twt.client.modbus.ontology.ModbusOntologyModule;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.Utilities;
 import eu.arrowhead.common.dto.shared.EventDTO;
@@ -70,10 +71,10 @@ public class SubscriberController {
 			logger.warn("There is no data in modbus system!");
 			return;
 		}
-		List<ModbusSystem.Module> modules = modbusSystemCacheManager.getHeadModules();
-		ModbusSystem.Module module = null;
+		List<ModbusOntologyModule> modules = modbusSystemCacheManager.getHeadModules();
+		ModbusOntologyModule module = null;
 		for (int id = 0; id < modules.size() ; id++ ) {
-			if (modules.get(id).getPreModuleName().equalsIgnoreCase(event.getEventType())) {
+			if (modules.get(id).name.equalsIgnoreCase(event.getEventType())) {
 				module = modules.get(id);
 				break;
 			}
@@ -83,13 +84,7 @@ public class SubscriberController {
 			return;
 		}
 		
-		ModbusSystem.Module.DataInterface input = module.getInput();
-		if (input == null) {
-			logger.warn("The Component does not have the input!");
-			return;
-		}
-		
-		ModbusDataCacheManager.setModbusData(input.getSlaveAddress(), input.getType(), 
-				input.getAddress(), event.getPayload());
+		ModbusDataCacheManager.setModbusData(module.ip, module.memoryType, 
+				module.memoryTypeAddress, event.getPayload());
 	}
 }

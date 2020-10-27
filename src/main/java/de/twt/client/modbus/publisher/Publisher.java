@@ -20,6 +20,7 @@ import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
 import de.twt.client.modbus.common.constants.ModbusConstants;
+import de.twt.client.modbus.ontology.ModbusOntologyModule;
 import de.twt.client.modbus.publisher.EventModbusData.Slave;
 import de.twt.client.modbus.publisher.EventModbusData.Slave.SlaveData;
 import eu.arrowhead.client.library.ArrowheadService;
@@ -61,7 +62,7 @@ public class Publisher {
 	public void publishOntology() {
 		logger.debug("start publishing module event regularly...");
 		createSystemRequestDTO();
-		List<ModbusSystem.Module> tails = modbusSystemCacheManager.getTailModules();
+		List<ModbusOntologyModule> tails = modbusSystemCacheManager.getTailModules();
 		if (tails.size() == 0) {
 			logger.info("this is already the end of production.");
 		}
@@ -71,7 +72,7 @@ public class Publisher {
 			@Override
 			public void run() {
 				if (!stopPublishing) {
-					for (ModbusSystem.Module tail : tails) {
+					for (ModbusOntologyModule tail : tails) {
 						publishOntologyOutput(tail);
 					}
 				}
@@ -80,27 +81,21 @@ public class Publisher {
 	}
 	
 	
-	private void publishOntologyOutput(ModbusSystem.Module module) {
-		if (module.getNextModuleName() == null || module.getNextModuleName() == "") {
+	private void publishOntologyOutput(ModbusOntologyModule module) {
+		if (module == null) {
+			logger.warn("there is no output module.");
 			return;
 		}
 		
-		ModbusSystem.Module.DataInterface output = module.getOutput();
-		
-		if (output == null) {
-			logger.warn("there is no output data at the last module {}.", module.getName());
-			return;
-		}
-		
-		String slaveAddress = output.getSlaveAddress();
+		String slaveAddress = module.ip;
 		if (!ModbusDataCacheManager.containsSlave(slaveAddress)) {
 			logger.warn("The slave ({}) does not exist in the modbus data cache.", slaveAddress);
 			return;
 		}
 		
 		String payload = "";
-		final int address = output.getAddress();
-		switch (output.getType()) {
+		final int address = module.memoryTypeAddress;
+		switch (module.memoryType) {
 		case coil: 
 			payload = ModbusDataCacheManager.getCoils(slaveAddress).get(address).toString(); break;
 		case discreteInput: 
@@ -110,7 +105,10 @@ public class Publisher {
 		case inputRegister: 
 			payload = ModbusDataCacheManager.getInputRegisters(slaveAddress).get(address).toString(); break;
 		}
-		final String eventType = module.getName();
+		if (payload == null) {
+			payload = module.defaultValue;
+		}
+		final String eventType = module.name;
 		final Map<String,String> metadata = new HashMap<String,String>();
 		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
 		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);

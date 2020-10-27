@@ -23,6 +23,7 @@ import de.twt.client.modbus.common.ModbusSystem;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.security.ModbusSecurityConfig;
+import de.twt.client.modbus.ontology.ModbusOntologyModule;
 import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.client.library.config.ApplicationInitListener;
 import eu.arrowhead.client.library.util.ClientCommonConstants;
@@ -153,27 +154,17 @@ public class PublisherApplicationInitListener extends ApplicationInitListener {
 	}
 
 	private void setDefaultValueInModbusDataCacheBasedOnModbusSystem() {
-		List<ModbusSystem.Module> tails = modbusSystemCacheManager.getTailModules();
-		for (ModbusSystem.Module tail : tails) {
-			ModbusSystem.Module.DataInterface output = tail.getOutput();
-			if (tail.getNextModuleName() == null || tail.getNextModuleName() == "") {
-				continue;
-			}
-			if (output == null) {
-				logger.warn("there is no output data at the last module {}.", tail.getName());
-				continue;
-			}
-			
-			String slaveAddress = output.getSlaveAddress();
-			int address = output.getAddress();
-			String defaultValue = output.getDefaultValue();
-			switch(output.getType()) {
+		List<ModbusOntologyModule> tails = modbusSystemCacheManager.getTailModules();
+		for (ModbusOntologyModule tail : tails) {
+			String slaveAddress = tail.ip;
+			int address = tail.memoryTypeAddress;
+			String defaultValue = tail.defaultValue;
+			switch(tail.memoryType) {
 			case coil: ModbusDataCacheManager.setCoil(slaveAddress, address, Boolean.valueOf(defaultValue)); break;
 			case discreteInput: ModbusDataCacheManager.setDiscreteInput(slaveAddress, address, Boolean.valueOf(defaultValue)); break;
 			case holdingRegister: ModbusDataCacheManager.setHoldingRegister(slaveAddress, address, Integer.valueOf(defaultValue)); break;
 			case inputRegister: ModbusDataCacheManager.setInputRegister(slaveAddress, address, Integer.valueOf(defaultValue)); break;
 			}
-			
 		}
 	}
 	
