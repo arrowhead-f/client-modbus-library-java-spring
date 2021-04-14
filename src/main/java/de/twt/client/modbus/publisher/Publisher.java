@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import de.twt.client.modbus.common.ModbusData;
 import de.twt.client.modbus.common.ModbusSystem;
+import de.twt.client.modbus.common.OntologyChangedEvent;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
@@ -57,6 +58,24 @@ public class Publisher {
 	private SystemRequestDTO source;
 	
 	//-------------------------------------------------------------------------------------------------
+	// Equipment Ontology Changed event
+	
+	public void publishOntologyChangedOnce(OntologyChangedEvent ontologyChangedEvent) {
+		logger.debug("start publishing ontology changed event...");
+		createSystemRequestDTO();
+		
+		final String eventType = PublisherConstants.ONTOLOGY_CHANGED;
+		String payload = ontologyChangedEvent.toString();
+		final Map<String,String> metadata = new HashMap<String,String>();
+		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
+		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);
+		arrowheadService.publishToEventHandler(publishRequestDTO);
+		
+		logger.debug("publish event {} successfully!", eventType);
+		
+	}
+	
+	//-------------------------------------------------------------------------------------------------
 	// Equipment Ontology event
 	
 	public void publishOntology() {
@@ -83,7 +102,7 @@ public class Publisher {
 	
 	private void publishOntologyOutput(ModbusOntologyModule module) {
 		if (module == null) {
-			logger.warn("there is no output module.");
+			logger.debug("there is no output module.");
 			return;
 		}
 		

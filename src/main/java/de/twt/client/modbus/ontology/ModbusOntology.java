@@ -2,6 +2,8 @@ package de.twt.client.modbus.ontology;
 
 import java.io.File;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
@@ -17,18 +19,19 @@ import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
 
+import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.constants.ModbusConstants;
-import eu.arrowhead.common.Utilities;
 
 public class ModbusOntology {
-	// final IRI baseIri = IRI.create("http://www.semanticweb.org/anwender/ontologies/2020/1/untitled-ontology-23");
 	final IRI baseIri = IRI.create("http://www.twt-gmbh.de/productive40/demonstrator");
 	OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
 	OWLDataFactory df = manager.getOWLDataFactory();
 	OWLOntology ontology;
 	OWLReasoner reasoner;
 	NodeSet<OWLNamedIndividual> subSystemIndividuals;
+	private final Logger logger = LogManager.getLogger(ModbusOntology.class);
 	
+	@SuppressWarnings("deprecation")
 	public void loadOntology(String filename) {
 		try {
 			ontology = manager.loadOntologyFromOntologyDocument(new File(filename));
@@ -44,11 +47,11 @@ public class ModbusOntology {
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	public String getSubscriptionModule(String subSystemsName) {
 		OWLNamedIndividual subSystemIndividual = getSubsystemIndividualWithName(subSystemsName);
 		OWLObjectProperty headModuleObjProperty = df.getOWLObjectProperty(IRI.create(baseIri + "#headModule"));
 		OWLObjectProperty nextModuleObjProperty = df.getOWLObjectProperty(IRI.create(baseIri + "#nextModule"));
-		OWLObjectProperty fulfilledObjProperty = df.getOWLObjectProperty(IRI.create(baseIri + "#isFulfilledBy"));
 		OWLNamedIndividual headModuleIndividual = reasoner.getObjectPropertyValues(subSystemIndividual, headModuleObjProperty).getFlattened().stream().findFirst().get();
 		OWLNamedIndividual subscriptionModuleIndividual = getOWLNamedIndividualWithObjectProperty(headModuleIndividual, nextModuleObjProperty);
 		System.out.println("---------------------");
@@ -57,20 +60,35 @@ public class ModbusOntology {
 	}
 	
 	public ModbusOntologyModule getInputModuleFromController(String subSystemsName) {
-		ModbusOntologyModule inputModule = getInputOutputModuleFromController(subSystemsName, true);
-		inputModule.name = getInputModule(subSystemsName);
+		ModbusOntologyModule inputModule = null;
+		try {
+			inputModule = getInputOutputModuleFromController(subSystemsName, true);
+			if (inputModule != null) {
+				inputModule.name = getInputModule(subSystemsName);
+			}
+		} catch(Exception e) {
+			logger.debug(e);
+		}
 		// System.out.println(Utilities.toJson(inputModule));
 		return inputModule;
 	}
 	
 	public ModbusOntologyModule getOutputModuleFromController(String subSystemsName) {
-		ModbusOntologyModule outputModule = getInputOutputModuleFromController(subSystemsName, false);
-		outputModule.name = getOutputModule(subSystemsName);
+		ModbusOntologyModule outputModule;
+		try {
+			outputModule = getInputOutputModuleFromController(subSystemsName, false);
+			if (outputModule != null) {
+				outputModule.name = getOutputModule(subSystemsName);
+			}
+		} catch(Exception e) {
+			return null;
+		}
 		// System.out.println(Utilities.toJson(outputModule));
 		return outputModule;
 	}
 	
-	public ModbusOntologyModule getInputOutputModuleFromController(String subSystemsName, boolean isInput) {
+	@SuppressWarnings("deprecation")
+	private ModbusOntologyModule getInputOutputModuleFromController(String subSystemsName, boolean isInput) {
 		OWLNamedIndividual subSystemIndividual = getSubsystemIndividualWithName(subSystemsName);
 		OWLObjectProperty controllsObjProperty = df.getOWLObjectProperty(IRI.create(baseIri + "#controlls"));
 		OWLNamedIndividual controllerModule = getOWLNamedIndividualWithObjectProperty(subSystemIndividual, controllsObjProperty);
@@ -80,6 +98,10 @@ public class ModbusOntology {
 		String className = isInput ? "#AH_ModbusTCP_Client_InputConnector" : "#AH_ModbusTCP_Client_OutputConnector";
 		OWLClass inputClass = df.getOWLClass(IRI.create(baseIri + className));
 		OWLNamedIndividual inputIndividual = getOWLNamedIndividualWithObjectProperty(controller, offersServiceObjProperty, inputClass);
+		
+		if (inputIndividual == null) {
+			return null;
+		}
 		
 		OWLDataProperty hasAddressDataProperty = df.getOWLDataProperty(IRI.create(baseIri + "#hasAddress"));
 		OWLDataProperty hasConnectorTypeDataProperty = df.getOWLDataProperty(IRI.create(baseIri + "#hasConnectorType"));
@@ -110,6 +132,7 @@ public class ModbusOntology {
 		return inputName;
 	}
 	
+	@SuppressWarnings("deprecation")
 	public String getOutputModule(String subSystemsName) {
 		OWLNamedIndividual subSystemIndividual = getSubsystemIndividualWithName(subSystemsName);
 		OWLObjectProperty tailModuleObjProperty = df.getOWLObjectProperty(IRI.create(baseIri + "#tailModule"));
@@ -119,6 +142,7 @@ public class ModbusOntology {
 		return tailModule;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private OWLClass getOWLClassFromOWLNamedIndividual(OWLNamedIndividual individual) {
 		OWLClass individualCls = null;
 		for(OWLClass cls : ontology.getClassesInSignature()) {
@@ -131,6 +155,7 @@ public class ModbusOntology {
 		return individualCls;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private OWLNamedIndividual getSubsystemIndividualWithName(String subSystemsName) {
 		OWLNamedIndividual subSystemIndividual = null;
 		for (OWLNamedIndividual ind : subSystemIndividuals.getFlattened()) {
@@ -142,6 +167,7 @@ public class ModbusOntology {
 		return subSystemIndividual;
 	}
 
+	@SuppressWarnings("deprecation")
 	private OWLNamedIndividual getOWLNamedIndividualWithObjectProperty(OWLNamedIndividual individual, OWLObjectProperty objProperty) {
 		OWLNamedIndividual individualFound = null;
 		for (OWLNamedIndividual ind : ontology.getIndividualsInSignature()) {
@@ -154,24 +180,6 @@ public class ModbusOntology {
 		return individualFound;
 	}
 	
-	private OWLNamedIndividual getHeadComponentIdividual(OWLNamedIndividual individual) {
-		OWLObjectProperty headComponentObjProperty = df.getOWLObjectProperty(IRI.create(baseIri + "#headComponent"));
-		NodeSet<OWLNamedIndividual> headComponentIndividuals = reasoner.getObjectPropertyValues(individual, headComponentObjProperty);
-		if (headComponentIndividuals.getFlattened().size() > 0) {
-			return getHeadComponentIdividual(headComponentIndividuals.getFlattened().stream().findFirst().get());
-		}
-		return individual;
-	}
-	
-	private OWLNamedIndividual getTailComponentIdividual(OWLNamedIndividual individual) {
-		OWLObjectProperty tailComponentObjProperty = df.getOWLObjectProperty(IRI.create(baseIri + "#tailComponent"));
-		NodeSet<OWLNamedIndividual> tailComponentIndividuals = reasoner.getObjectPropertyValues(individual, tailComponentObjProperty);
-		if (tailComponentIndividuals.getFlattened().size() > 0) {
-			return getHeadComponentIdividual(tailComponentIndividuals.getFlattened().stream().findFirst().get());
-		}
-		return individual;
-	}
-
 	private OWLNamedIndividual getOWLNamedIndividualWithObjectProperty(OWLNamedIndividual individual, OWLObjectProperty objProperty, OWLClass individualFoundClass) {
 		OWLNamedIndividual individualFound = null;
 		String individualFoundClassName = individualFoundClass.getIRI().getFragment();

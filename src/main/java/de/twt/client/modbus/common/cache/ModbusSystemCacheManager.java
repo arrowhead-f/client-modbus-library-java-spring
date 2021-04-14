@@ -15,17 +15,28 @@ import de.twt.client.modbus.ontology.ModbusOntologyModule;
 
 @Service
 public class ModbusSystemCacheManager {
-	@Value("modbus.ontology.filepath")
+	
+	
+	@Value("${modbus.ontology.system}")
+	private String systemName;
+	@Value("${modbus.ontology.filename}")
 	private String filename;
 	
-	@Value("modbus.ontology.system")
-	private String systemName;
-	
-	private final ModbusOntology ontology = new ModbusOntology();
+	private ModbusOntology ontology = new ModbusOntology();
 	
 	@PostConstruct
     private void postConstruct() {
 		ontology.loadOntology(filename);
+	}
+	
+	synchronized public void setNewFilename(String filename) {
+		this.filename = filename;
+		ontology = new ModbusOntology();
+		ontology.loadOntology(filename);
+	}
+	
+	synchronized public void setNewsystemName(String systemName) {
+		this.systemName = systemName;
 	}
 	
 	private final Logger logger = LogManager.getLogger(ModbusSystemCacheManager.class);
@@ -34,10 +45,15 @@ public class ModbusSystemCacheManager {
 	
 	private List<ModbusOntologyModule> getInputOutputModules(HeadTail type) {
 		List<ModbusOntologyModule> headTails = new ArrayList<>();
-		System.out.println(systemName);
 		switch (type) {
-		case head: headTails.add(ontology.getInputModuleFromController(systemName)); break;
-		case tail: headTails.add(ontology.getOutputModuleFromController(systemName)); break;
+		case head: 
+			ModbusOntologyModule inputModule = ontology.getInputModuleFromController(systemName); 
+			if (inputModule != null) headTails.add(inputModule); 
+			break;
+		case tail: 
+			ModbusOntologyModule outputModule = ontology.getOutputModuleFromController(systemName); 
+			if (outputModule != null) headTails.add(outputModule); 
+			break;
 		}
 		return headTails;
 		

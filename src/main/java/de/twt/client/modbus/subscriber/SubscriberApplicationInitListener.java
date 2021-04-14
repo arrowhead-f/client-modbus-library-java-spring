@@ -95,7 +95,7 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 		// set default input in den ModbusDataManager
 		List<ModbusOntologyModule> modules = modbusSystemCacheManager.getHeadModules();
 		for (ModbusOntologyModule module : modules) {
-			if (module.name == null || module.name == "") {
+			if (module == null) {
 				continue;
 			}
 			
@@ -175,7 +175,37 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 			subscriber.setAuthenticationInfo(Base64.getEncoder().encodeToString(arrowheadService.getMyPublicKey().getEncoded()));
 		}
 		
-		for (final String eventType : eventTypeMap.keySet()) {					
+		List<ModbusOntologyModule> modules = modbusSystemCacheManager.getHeadModules();
+		for (ModbusOntologyModule module : modules) {
+			if (module == null) {
+				continue;
+			}
+			
+			try {					
+				arrowheadService.unsubscribeFromEventHandler(module.name, clientSystemName, clientSystemAddress, clientSystemPort);				
+			} catch (final Exception ex) {					
+				logger.debug("Exception happend in subscription initalization " + ex);
+			}
+			
+			try {
+				arrowheadService.subscribeToEventHandler(
+						SubscriberUtilities.createSubscriptionRequestDTO(module.name, subscriber, "input"));				
+			} catch ( final InvalidParameterException ex) {					
+				if( ex.getMessage().contains("Subscription violates uniqueConstraint rules")) {						
+					logger.debug("Subscription is already in DB");
+				}
+			} catch (final Exception ex) {
+				logger.debug("Could not subscribe to EventType: " + module.name);
+			} 
+			logger.info("subscribe event {} with URI {} successfully!", module.name, "input");
+			
+		}
+		
+		for (final String eventType : eventTypeMap.keySet()) {
+			if (eventType == null) {
+				continue;
+			}
+			
 			try {					
 				arrowheadService.unsubscribeFromEventHandler(eventType, clientSystemName, clientSystemAddress, clientSystemPort);				
 			} catch (final Exception ex) {					

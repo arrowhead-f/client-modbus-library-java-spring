@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import de.twt.client.modbus.common.ModbusData;
 import de.twt.client.modbus.common.ModbusSystem;
+import de.twt.client.modbus.common.OntologyChangedEvent;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
@@ -74,6 +75,9 @@ public class SubscriberController {
 		List<ModbusOntologyModule> modules = modbusSystemCacheManager.getHeadModules();
 		ModbusOntologyModule module = null;
 		for (int id = 0; id < modules.size() ; id++ ) {
+			if (modules.get(id) == null || modules.get(id).name == null) {
+				continue;
+			}
 			if (modules.get(id).name.equalsIgnoreCase(event.getEventType())) {
 				module = modules.get(id);
 				break;
@@ -83,8 +87,31 @@ public class SubscriberController {
 			logger.warn("There is no component that matches this event {}!", event.getEventType());
 			return;
 		}
-		
+
 		ModbusDataCacheManager.setModbusData(module.ip, module.memoryType, 
 				module.memoryTypeAddress, event.getPayload());
+	}
+	
+	@PostMapping(path = SubscriberConstants.ONTOLOGY_CHANGED_URI) 
+	public void receivePublsisherOntologyChanged(@RequestBody final EventDTO event) {
+		logger.debug("receivePublsisherOntologyChanged started... ");
+		System.out.println("receivePublsisherOntologyChanged");
+		if (event.getEventType() == null) {			
+			logger.warn("EventType is null.");
+			return;
+		}
+		String systemName = modbusSystemCacheManager.getModbusSystem();
+		if (systemName == null) {
+			logger.warn("There is no data in modbus system!");
+			return;
+		}
+		
+		OntologyChangedEvent ontologyChangedEvent = Utilities.fromJson(event.getPayload(), OntologyChangedEvent.class);
+		if (!ontologyChangedEvent.getSystemNames().contains(systemName)) {
+			logger.info("ontology system {} is ignored bei ontology change event {}.", systemName, ontologyChangedEvent.getSystemNames().toString());
+			return;
+		}
+
+		modbusSystemCacheManager.setNewFilename(ontologyChangedEvent.getFilename());
 	}
 }

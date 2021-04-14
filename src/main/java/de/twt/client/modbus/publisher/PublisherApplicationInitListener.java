@@ -156,6 +156,9 @@ public class PublisherApplicationInitListener extends ApplicationInitListener {
 	private void setDefaultValueInModbusDataCacheBasedOnModbusSystem() {
 		List<ModbusOntologyModule> tails = modbusSystemCacheManager.getTailModules();
 		for (ModbusOntologyModule tail : tails) {
+			if (tail == null) {
+				continue;
+			}
 			String slaveAddress = tail.ip;
 			int address = tail.memoryTypeAddress;
 			String defaultValue = tail.defaultValue;

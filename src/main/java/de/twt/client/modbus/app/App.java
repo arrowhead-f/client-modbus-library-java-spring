@@ -18,18 +18,19 @@ import de.twt.client.modbus.consumer.Consumer;
 import de.twt.client.modbus.dataWriter.ModbusDataWriter;
 import de.twt.client.modbus.master.MasterTCP;
 import de.twt.client.modbus.master.MasterTCPConfig;
+import de.twt.client.modbus.ontology.ModbusOntology;
 import de.twt.client.modbus.publisher.EventModbusData;
 import de.twt.client.modbus.publisher.Publisher;
 import de.twt.client.modbus.slave.SlaveTCP;
 import de.twt.client.modbus.slave.SlaveTCPConfig;
 import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.common.CommonConstants;
+import eu.arrowhead.common.Utilities;
 
 @SpringBootApplication
-@PropertySource("classpath:application.properties")
 @ComponentScan(basePackages = {
 //		CommonConstants.BASE_PACKAGE, 
-		PackageConstants.BASE_PACKAGE_COMMON, 
+//		PackageConstants.BASE_PACKAGE_COMMON, 
 //		PackageConstants.BASE_PACKAGE_DATAWRITER,
 //		PackageConstants.BASE_PACKAGE_PROVIDER,
 //		PackageConstants.BASE_PACKAGE_CONSUMER,
@@ -116,6 +117,9 @@ public class App implements ApplicationRunner {
     @Override
 	public void run(final ApplicationArguments args) throws Exception {
     	logger.info("App started...");
+    	ModbusOntology ontology = new ModbusOntology();
+    	ontology.loadOntology("C:\\Projects\\Productive4.0\\ontology\\2020-10-27_ManufacturingOntology-v12f_prodLinie.owl");
+    	System.out.println(Utilities.toJson(ontology.getInputModuleFromController("PSS1")));
     	// modbusDataWriter.startRecord();
     	// consumer.readDataThread();
     	// consumer.WriteDataThread();
