@@ -95,7 +95,6 @@ public class SubscriberController {
 	@PostMapping(path = SubscriberConstants.ONTOLOGY_CHANGED_URI) 
 	public void receivePublsisherOntologyChanged(@RequestBody final EventDTO event) {
 		logger.debug("receivePublsisherOntologyChanged started... ");
-		System.out.println("receivePublsisherOntologyChanged");
 		if (event.getEventType() == null) {			
 			logger.warn("EventType is null.");
 			return;

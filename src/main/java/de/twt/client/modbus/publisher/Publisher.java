@@ -65,7 +65,7 @@ public class Publisher {
 		createSystemRequestDTO();
 		
 		final String eventType = PublisherConstants.ONTOLOGY_CHANGED;
-		String payload = ontologyChangedEvent.toString();
+		String payload = Utilities.toJson(ontologyChangedEvent);
 		final Map<String,String> metadata = new HashMap<String,String>();
 		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
 		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);
